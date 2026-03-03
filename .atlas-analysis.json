@@ -1,0 +1,57 @@
+{
+  "projectType": "saas",
+  "projectName": "Rock Paper Scissors",
+  "projectDescription": "A full-stack web application for playing rock, paper, scissors against a computer opponent with real-time game results.",
+  "theme": "almond",
+  "primaryColor": "#1ea4c9",
+  "lightColor": "#89def6",
+  "darkColor": "#282c34",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": ["introduction", "quickstart"]
+          },
+          {
+            "group": "Features",
+            "pages": ["features/gameplay", "features/ui-components"]
+          },
+          {
+            "group": "Development",
+            "pages": ["development/setup", "development/architecture", "development/frontend", "development/backend"]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "Endpoints",
+            "pages": ["api/play-game"]
+          },
+          {
+            "group": "Components",
+            "pages": ["api/action-button", "api/action-icon", "api/player"]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Interactive rock, paper, scissors gameplay",
+    "Real-time game results with visual feedback",
+    "Responsive UI with animated icons",
+    "Flask REST API backend",
+    "React component-based frontend"
+  ],
+  "publicApiSurface": [
+    "POST /play_game",
+    "ActionButton component",
+    "ActionIcon component", 
+    "Player component",
+    "get_winner(player, opponent)"
+  ]
+}
