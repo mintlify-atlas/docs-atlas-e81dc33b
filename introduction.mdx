@@ -1,0 +1,103 @@
+---
+title: Introduction
+description: Welcome to the Rock Paper Scissors game - a modern web application built with Flask and React
+---
+
+## What is Rock Paper Scissors?
+
+Rock Paper Scissors is a classic web application that brings the timeless game to your browser. Built with a Flask backend and React frontend, this project demonstrates how to create an interactive, full-stack web application where users can play against a computer opponent in real-time.
+
+Every game is unpredictable and fair - the computer makes random choices using Python's random module, ensuring each round is a genuine challenge.
+
+<CardGroup cols={3}>
+  <Card
+    title="Quickstart"
+    icon="rocket"
+    href="/quickstart"
+  >
+    Get the application running in minutes
+  </Card>
+  <Card
+    title="API Reference"
+    icon="code"
+    href="/api/play-game"
+  >
+    Learn about the game logic endpoint
+  </Card>
+  <Card
+    title="Architecture"
+    icon="diagram-project"
+    href="/development/architecture"
+  >
+    Understand how Flask and React work together
+  </Card>
+</CardGroup>
+
+## Key Features
+
+### Interactive Gameplay
+Click rock, paper, or scissors buttons to make your move. The React frontend sends your choice to the Flask backend, which determines the winner and sends back the computer's action in real-time.
+
+### Visual Feedback
+Animated icons show both player and computer choices, with dynamic styling that highlights the winner. The UI updates instantly to show whether you won, lost, or tied.
+
+### Clean Architecture
+The application separates concerns beautifully:
+- **Flask Backend** (`server.py:26-52`) handles game logic through a single `/play_game` endpoint
+- **React Frontend** (`App.js:106-142`) manages UI state and user interactions
+- **API Communication** uses JSON for seamless data exchange between frontend and backend
+
+### Stateless Design
+Each game round is independent - no session management required. The server processes each request, determines the outcome using the `get_winner()` function (`server.py:57-75`), and returns the result.
+
+## Technology Stack
+
+<CardGroup cols={2}>
+  <Card title="Backend" icon="python">
+    **Flask 2.3.2** - Lightweight Python web framework that handles HTTP requests and game logic
+  </Card>
+  <Card title="Frontend" icon="react">
+    **React 18.2.0** - Modern UI library with hooks for state management and React Icons for beautiful button designs
+  </Card>
+</CardGroup>
+
+## Architecture Overview
+
+The application follows a client-server architecture:
+
+```
+┌─────────────────┐         HTTP POST          ┌─────────────────┐
+│                 │      /play_game             │                 │
+│  React Client   │─────────────────────────────▶│  Flask Server   │
+│  (Port 3000)    │                             │  (Port 5000)    │
+│                 │◀─────────────────────────────│                 │
+└─────────────────┘   JSON Response             └─────────────────┘
+                      {result, computer_action}
+```
+
+**How it works:**
+
+1. User clicks a button (rock, paper, or scissors) in the React interface
+2. `ActionButton` component (`App.js:36-54`) sends a POST request to `/play_game` with the selected action
+3. Flask server receives the request, generates a random computer action, and determines the winner
+4. Server responds with the result and computer's choice
+5. React updates the UI to display both actions and the game outcome
+
+<Note>
+  The React development server proxies API requests to `http://127.0.0.1:5000/` as configured in `package.json:5`, eliminating CORS issues during development.
+</Note>
+
+## What You'll Learn
+
+By exploring this project, you'll understand:
+
+- How to structure a Flask + React full-stack application
+- HTTP communication between frontend and backend using `fetch` API
+- React state management with `useState` hooks
+- Component-based UI architecture in React
+- RESTful API design with Flask
+- Game logic implementation in Python
+
+## Ready to Play?
+
+Head over to the [Quickstart](/quickstart) guide to get the application running on your local machine in just a few minutes.

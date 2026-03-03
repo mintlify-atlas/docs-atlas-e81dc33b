@@ -1,80 +1,259 @@
 ---
-title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+title: Quickstart
+description: Get the Rock Paper Scissors game running on your local machine in minutes
 ---
 
-## Get started in three steps
+This guide will walk you through setting up and running the Rock Paper Scissors game locally. You'll have both the Flask backend and React frontend running in just a few steps.
 
-Get your documentation site running locally and make your first customization.
+## Prerequisites
 
-### Step 1: Set up your local environment
+Before you begin, ensure you have the following installed:
+
+- **Python 3** - For running the Flask backend server
+- **pip3** - Python package installer
+- **Node.js and npm** - For running the React frontend
+- **Git** - For cloning the repository
+
+<Tip>
+  Check your installations by running `python3 --version`, `npm --version`, and `git --version` in your terminal.
+</Tip>
+
+## Installation
+
+<Steps>
+  <Step title="Clone the Repository">
+    Clone the project repository to your local machine:
+
+    ```bash
+    git clone https://github.com/carolinajimenez/rock-paper-scissors-flask-react
+    ```
+  </Step>
+
+  <Step title="Navigate to Project Directory">
+    Change into the project directory:
+
+    ```bash
+    cd rock-paper-scissors-flask-react
+    ```
+  </Step>
+
+  <Step title="Install Backend Dependencies">
+    Navigate to the Flask server directory and install Python dependencies:
+
+    ```bash
+    cd flask-server
+    pip3 install -r requirements.txt
+    ```
+
+    This installs Flask 2.3.2, the only backend dependency needed.
+  </Step>
+
+  <Step title="Install Frontend Dependencies">
+    In a new terminal window, navigate to the client directory and install npm packages:
+
+    ```bash
+    cd client
+    npm install
+    ```
+
+    This installs React, React Icons, and all other frontend dependencies listed in `package.json`.
+
+    <Note>
+      The installation may take a few minutes as npm downloads all required packages.
+    </Note>
+  </Step>
+</Steps>
+
+## Running the Application
+
+You'll need to run both the backend and frontend servers simultaneously in separate terminal windows.
+
+<Steps>
+  <Step title="Start the Flask Backend">
+    In your first terminal, from the `flask-server` directory, run:
+
+    ```bash
+    python3 server.py
+    ```
+
+    You should see output indicating the Flask server is running:
+
+    ```
+    * Serving Flask app 'server'
+    * Debug mode: on
+    * Running on http://127.0.0.1:5000
+    ```
+
+    <Tip>
+      The server runs in debug mode by default, which means it will automatically reload when you make changes to the code.
+    </Tip>
+  </Step>
+
+  <Step title="Start the React Frontend">
+    In your second terminal, from the `client` directory, run:
+
+    ```bash
+    npm start
+    ```
+
+    The React development server will start and automatically open your browser to `http://localhost:3000`.
+
+    ```
+    Compiled successfully!
+    
+    You can now view client in the browser.
+    
+      Local:            http://localhost:3000
+    ```
+  </Step>
+
+  <Step title="Verify Both Servers are Running">
+    Confirm you have:
+    - Flask backend running on `http://127.0.0.1:5000`
+    - React frontend running on `http://localhost:3000`
+
+    The React app is configured to proxy API requests to the Flask server automatically.
+  </Step>
+</Steps>
+
+## Making Your First Play
+
+Now that both servers are running, let's play a game!
+
+<Steps>
+  <Step title="Open the Application">
+    Navigate to `http://localhost:3000` in your web browser. You'll see the game interface with three buttons: rock, paper, and scissors.
+  </Step>
+
+  <Step title="Select Your Action">
+    Click one of the three action buttons:
+    - **Rock** (fist icon)
+    - **Paper** (hand icon)
+    - **Scissors** (peace sign icon)
+
+    When you click a button, the `ActionButton` component sends a POST request:
+
+    ```javascript
+    fetch('/play_game', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ action }),
+    })
+    ```
+  </Step>
+
+  <Step title="View the Results">
+    The game instantly shows:
+    - Your selected action with an animated icon
+    - The computer's randomly chosen action
+    - The result: "Player won!", "Player lost!", or "It's a tie"
+
+    The selected button highlights, and the player cards update with visual styling to indicate the winner.
+  </Step>
+
+  <Step title="Play Again">
+    Click any button to start a new round. Each game is independent - the computer makes a fresh random choice every time!
+  </Step>
+</Steps>
+
+## Understanding the Game Flow
+
+Here's what happens behind the scenes when you make a move:
+
+1. **Frontend**: You click a button (e.g., rock with action value `'r'`)
+2. **API Request**: React sends `{"action": "r"}` to `/play_game` endpoint
+3. **Backend Logic**: Flask's `play_game()` function (`server.py:26-52`):
+   - Receives your action
+   - Generates a random computer action: `random.choice(['r', 'p', 's'])`
+   - Calls `get_winner()` to determine the outcome
+   - Returns `{"result": "...", "computer_action": "..."}`
+4. **UI Update**: React updates state and displays the results
+
+<CodeGroup>
+
+```python server.py
+@app.route("/play_game", methods=["POST"])
+def play_game():
+    # Retrieve user's action from the request payload
+    user_action = request.json['action']
+    # Generate a random action for the computer
+    computer_action = random.choice(['r', 'p', 's'])
+
+    # Determine the game result
+    if user_action == computer_action:
+        return {"result": "It's a tie", "computer_action": computer_action}
+
+    if get_winner(user_action, computer_action):
+        return {"result": "Player won!", "computer_action": computer_action}
+
+    return {"result": "Player lost!", "computer_action": computer_action}
+```
+
+```python Game Logic
+def get_winner(player, opponent):
+    # Define winning conditions for the player
+    if (player == 'r' and opponent == 's') or \
+       (player == 's' and opponent == 'p') or \
+       (player == 'p' and opponent == 'r'):
+        return True
+    return False
+```
+
+</CodeGroup>
+
+## Troubleshooting
 
 <AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
+  <Accordion title="Port 3000 or 5000 already in use">
+    If you see an error about ports being in use:
     
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
+    - For Flask (port 5000): Stop any other Flask apps or processes using port 5000
+    - For React (port 3000): The development server will prompt you to use a different port (usually 3001)
+    
+    Alternatively, you can kill processes on these ports:
+    ```bash
+    # On macOS/Linux
+    lsof -ti:5000 | xargs kill
+    lsof -ti:3000 | xargs kill
+    ```
   </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
+
+  <Accordion title="API requests failing">
+    If the game doesn't respond when you click buttons:
     
-    <Tip>Your preview updates automatically as you edit files.</Tip>
+    1. Verify the Flask server is running on `http://127.0.0.1:5000`
+    2. Check the browser console for error messages
+    3. Ensure `package.json` has the proxy setting: `"proxy": "http://127.0.0.1:5000/"`
+    4. Try restarting both servers
+  </Accordion>
+
+  <Accordion title="Module not found errors">
+    If you see import errors:
+    
+    - **Python**: Ensure you ran `pip3 install -r requirements.txt` in the `flask-server` directory
+    - **JavaScript**: Ensure you ran `npm install` in the `client` directory
+    
+    Try deleting `node_modules` and running `npm install` again if the issue persists.
   </Accordion>
 </AccordionGroup>
 
-### Step 2: Deploy your changes
+## Next Steps
 
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
-    
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
-
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
-
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
-
-### Step 3: Go live
-
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
-
-## Next steps
-
-Now that you have your docs running, explore these key features:
+Now that you have the game running:
 
 <CardGroup cols={2}>
-
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
-
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
-
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
-
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
-
+  <Card title="Explore the API" icon="code" href="/api/play-game">
+    Learn how the `/play_game` endpoint works
+  </Card>
+  <Card title="Understand the Architecture" icon="diagram-project" href="/development/architecture">
+    Dive deeper into the Flask + React setup
+  </Card>
+  <Card title="UI Components" icon="palette" href="/features/ui-components">
+    Learn about the visual elements and styling
+  </Card>
+  <Card title="View Source Code" icon="github" href="https://github.com/carolinajimenez/rock-paper-scissors-flask-react">
+    Check out the full codebase on GitHub
+  </Card>
 </CardGroup>
-
-<Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
-</Note>

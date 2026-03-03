@@ -1,0 +1,194 @@
+---
+title: Development Setup
+description: Set up your local development environment for the Rock Paper Scissors game
+---
+
+## Project Structure
+
+The Rock Paper Scissors project is organized into two main directories:
+
+```
+rock-paper-scissors-flask-react/
+├── client/                 # React frontend application
+│   ├── public/
+│   ├── src/
+│   │   ├── App.js         # Main React component
+│   │   ├── App.css        # Application styles
+│   │   ├── images/        # Game assets (rock, paper, scissors GIFs)
+│   │   └── index.js       # React entry point
+│   └── package.json       # Frontend dependencies
+└── flask-server/          # Flask backend API
+    ├── server.py          # Flask application and game logic
+    └── requirements.txt   # Python dependencies
+```
+
+<Note>
+The frontend and backend run as separate processes during development, with the React dev server proxying API requests to Flask.
+</Note>
+
+## Prerequisites
+
+Before starting, ensure you have the following installed:
+
+- **Python 3.x** - For running the Flask backend
+- **Node.js and npm** - For running the React frontend
+- **Git** - For cloning the repository
+
+## Installation
+
+<Steps>
+  <Step title="Clone the Repository">
+    Clone the project to your local machine:
+    
+    ```bash
+    git clone https://github.com/carolinajimenez/rock-paper-scissors-flask-react
+    cd rock-paper-scissors-flask-react
+    ```
+  </Step>
+
+  <Step title="Install Backend Dependencies">
+    Navigate to the Flask server directory and install Python dependencies:
+    
+    ```bash
+    cd flask-server
+    pip3 install -r requirements.txt
+    ```
+    
+    The `requirements.txt` file contains:
+    
+    ```txt
+    Flask==2.3.2
+    ```
+  </Step>
+
+  <Step title="Install Frontend Dependencies">
+    Open a new terminal, navigate to the client directory, and install npm packages:
+    
+    ```bash
+    cd client
+    npm install
+    ```
+    
+    This installs the following key dependencies:
+    - `react` (^18.2.0) - React library
+    - `react-dom` (^18.2.0) - React DOM rendering
+    - `react-icons` (^5.0.1) - Icon library for game buttons
+    - `react-scripts` (5.0.1) - Create React App build tools
+  </Step>
+</Steps>
+
+## Running in Development Mode
+
+<Warning>
+You must run both the backend and frontend servers simultaneously for the application to work properly.
+</Warning>
+
+<Steps>
+  <Step title="Start the Flask Backend">
+    In the `flask-server` directory, run:
+    
+    ```bash
+    python3 server.py
+    ```
+    
+    The Flask server will start on `http://127.0.0.1:5000/` with debug mode enabled.
+    
+    You should see output similar to:
+    ```
+    * Running on http://127.0.0.1:5000
+    * Debug mode: on
+    ```
+  </Step>
+
+  <Step title="Start the React Frontend">
+    In a separate terminal, navigate to the `client` directory and run:
+    
+    ```bash
+    npm start
+    ```
+    
+    The React development server will start on `http://localhost:3000` and automatically open in your browser.
+  </Step>
+
+  <Step title="Access the Application">
+    Open your browser and navigate to:
+    
+    ```
+    http://localhost:3000
+    ```
+    
+    The application should load, and you can start playing Rock Paper Scissors!
+  </Step>
+</Steps>
+
+## Development Workflow
+
+<Tip>
+Both servers support hot-reloading:
+- **Flask**: Automatically restarts when you modify `server.py` (debug mode)
+- **React**: Automatically refreshes the browser when you modify component files
+</Tip>
+
+### Making Code Changes
+
+**Backend Changes** (`flask-server/server.py`):
+- Save your changes
+- Flask automatically restarts the server
+- Refresh your browser to see API changes
+
+**Frontend Changes** (`client/src/App.js` or `App.css`):
+- Save your changes
+- React automatically recompiles and refreshes the browser
+- Changes appear instantly
+
+## Troubleshooting
+
+### Port Already in Use
+
+If port 5000 or 3000 is already in use:
+
+**For Flask (port 5000)**:
+```bash
+# Find and kill the process using port 5000
+lsof -ti:5000 | xargs kill -9
+```
+
+**For React (port 3000)**:
+- React will automatically prompt you to use a different port
+- Or manually kill the process:
+```bash
+lsof -ti:3000 | xargs kill -9
+```
+
+### Module Not Found Errors
+
+**Backend**:
+```bash
+cd flask-server
+pip3 install -r requirements.txt
+```
+
+**Frontend**:
+```bash
+cd client
+rm -rf node_modules package-lock.json
+npm install
+```
+
+### Proxy Connection Issues
+
+If the frontend cannot connect to the backend, verify the proxy configuration in `client/package.json`:
+
+```json
+"proxy": "http://127.0.0.1:5000/"
+```
+
+Ensure the Flask server is running on port 5000.
+
+## Next Steps
+
+Now that your development environment is set up:
+
+- Learn about the [Architecture](/development/architecture) to understand how the app works
+- Explore the [Frontend](/development/frontend) React components
+- Dive into the [Backend](/development/backend) Flask API and game logic

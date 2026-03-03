@@ -1,0 +1,157 @@
+---
+title: 'Player'
+description: 'Component representing a player (human or computer) in the Rock Paper Scissors game'
+---
+
+## Overview
+
+The `Player` component displays a player's information including their name, current action icon, and applies visual styling based on the game result. It's used for both the human player and the computer opponent.
+
+## Props
+
+<ParamField path="name" type="string" default="Player">
+  The name of the player to display:
+  - `'Player'` - Represents the human player
+  - `'Computer'` - Represents the computer opponent
+  
+  This affects both the displayed text and the CSS classes applied.
+</ParamField>
+
+<ParamField path="action" type="string" default="start">
+  The current action chosen by this player:
+  - `'start'` - Initial state before any action is selected
+  - `'r'` - Rock
+  - `'p'` - Paper
+  - `'s'` - Scissors
+  
+  This value is passed to the `ActionIcon` component to display the appropriate icon.
+</ParamField>
+
+<ParamField path="winner" type="string">
+  The result of the game, used to apply winner/loser styling:
+  - `'Player won!'` - Applies "you" CSS classes (player victory styling)
+  - `'Player lost!'` - Applies "pc" CSS classes (computer victory styling)
+  - `'It\'s a tie'` - Applies "draw" CSS classes (tie game styling)
+  - `''` or `undefined` - No result styling (neutral state)
+</ParamField>
+
+## Result Display Logic
+
+The component converts the `winner` prop into a CSS class suffix using the following logic:
+
+```jsx
+const result = (winner === undefined || winner === "") 
+  ? "" 
+  : winner === "Player won!" 
+    ? "you" 
+    : winner === "Player lost!" 
+      ? "pc" 
+      : "draw";
+```
+
+**Result values:**
+- Empty string (`""`) - No game result yet
+- `"you"` - Player won
+- `"pc"` - Computer won (player lost)
+- `"draw"` - Tie game
+
+## CSS Classes
+
+The component applies dynamic CSS classes based on the player name and game result:
+
+### Container div
+- Format: `player {name}-{result}`
+- Examples:
+  - `player Player-you` (Player won)
+  - `player Computer-pc` (Computer won / Player lost)
+  - `player Player-draw` (Tie)
+  - `player Player-` (No result yet)
+
+### Score div
+- Format: `score {name}-{result}`
+- Contains the player's name text
+
+## Usage Examples
+
+### Initial State (Before Game Starts)
+
+```jsx
+<Player name="Player" action="start" winner="" />
+<Player name="Computer" action="start" winner="" />
+```
+
+### During/After Game
+
+```jsx
+// Player chose rock and won
+<Player name="Player" action="r" winner="Player won!" />
+
+// Computer chose scissors and lost
+<Player name="Computer" action="s" winner="Player won!" />
+```
+
+### Tie Game
+
+```jsx
+<Player name="Player" action="p" winner="It's a tie" />
+<Player name="Computer" action="p" winner="It's a tie" />
+```
+
+### Usage in App Component
+
+From `App.js:133-135`:
+
+```jsx
+function App() {
+  const [playerAction, setPlayerAction] = useState("start");
+  const [computerAction, setComputerAction] = useState("start");
+  const [winner, setWinner] = useState("");
+
+  return (
+    <div className="App">
+      <header className="App-container">
+        <h1>Rock Paper Scissors</h1>
+        <div className="container">
+          <Player name="Player" action={playerAction} winner={winner} />
+          <h2>vs</h2>
+          <Player name="Computer" action={computerAction} winner={winner} />
+        </div>
+        <h2>{winner}</h2>
+      </header>
+    </div>
+  );
+}
+```
+
+## Component Implementation
+
+From `App.js:87-104`:
+
+```jsx
+function Player({name = "Player", action="start", winner}) {
+  const result = (winner === undefined || winner === "") 
+    ? "" 
+    : winner === "Player won!" 
+      ? "you" 
+      : winner === "Player lost!" 
+        ? "pc" 
+        : "draw";
+  
+  return (
+    <div className={`player ${name}-${result}`}>
+      <div className={`score ${name}-${result}`}>{`${name}`}</div>
+      <div className="action">
+        {action && <ActionIcon name={name} action={action} />}
+      </div>
+    </div>
+  );
+}
+```
+
+## Dependencies
+
+The Player component uses the `ActionIcon` component to display the action images. Make sure to import it:
+
+```jsx
+import { ActionIcon } from './ActionIcon';
+```

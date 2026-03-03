@@ -1,0 +1,151 @@
+---
+title: 'ActionButton'
+description: 'Button component for selecting rock, paper, or scissors actions'
+---
+
+## Overview
+
+The `ActionButton` component renders an interactive button for selecting one of the three game actions (Rock, Paper, or Scissors). When clicked, it sends the action to the Flask server and handles the response.
+
+## Props
+
+<ParamField path="action" type="string" required>
+  The action associated with this button:
+  - `'r'` - Rock (displays fist icon)
+  - `'p'` - Paper (displays hand icon)
+  - `'s'` - Scissors (displays peace sign icon)
+</ParamField>
+
+<ParamField path="onActionSelected" type="function" required>
+  Callback function invoked when the button is clicked and the server responds.
+  
+  **Signature:** `(response, action) => void`
+  
+  - `response` (object) - The server response containing `result` and `computer_action`
+  - `action` (string) - The action that was selected (`'r'`, `'p'`, or `'s'`)
+</ParamField>
+
+<ParamField path="activeButton" type="string">
+  The currently active button. Used to apply the `active` CSS class to the selected button.
+  
+  Value should be `'r'`, `'p'`, `'s'`, or `null`.
+</ParamField>
+
+<ParamField path="setActiveButton" type="function" required>
+  Function to set the currently active button.
+  
+  **Signature:** `(action: string) => void`
+  
+  Called with the button's action when clicked.
+</ParamField>
+
+## Behavior
+
+When the button is clicked:
+
+1. Sets itself as the active button using `setActiveButton(action)`
+2. Sends a POST request to `/play_game` with the selected action
+3. Calls `onActionSelected` with the server response and the selected action
+4. Handles errors via console logging
+
+## Icons
+
+The component uses React Icons (fa6) for visual representation:
+
+- Rock (`'r'`): `<FaHandFist />`
+- Paper (`'p'`): `<FaHand />`
+- Scissors (`'s'`): `<FaHandPeace />`
+
+## Usage Example
+
+From `App.js:127-131`:
+
+```jsx
+import React, { useState } from 'react';
+import { ActionButton } from './ActionButton';
+
+function App() {
+  const [activeButton, setActiveButton] = useState(null);
+  const [playerAction, setPlayerAction] = useState("start");
+  const [computerAction, setComputerAction] = useState("start");
+  const [winner, setWinner] = useState("");
+
+  const onActionSelected = (response, selectedAction) => {
+    setPlayerAction(selectedAction);
+    setComputerAction(response['computer_action']);
+    setWinner(response['result']);
+  };
+
+  return (
+    <div className="action-btn">
+      <ActionButton 
+        action="r" 
+        onActionSelected={onActionSelected} 
+        activeButton={activeButton} 
+        setActiveButton={setActiveButton} 
+      />
+      <ActionButton 
+        action="p" 
+        onActionSelected={onActionSelected} 
+        activeButton={activeButton} 
+        setActiveButton={setActiveButton} 
+      />
+      <ActionButton 
+        action="s" 
+        onActionSelected={onActionSelected} 
+        activeButton={activeButton} 
+        setActiveButton={setActiveButton} 
+      />
+    </div>
+  );
+}
+```
+
+## Component Implementation
+
+From `App.js:20-64`:
+
+```jsx
+function ActionButton({ action, onActionSelected, activeButton, setActiveButton }) {
+  const ICONS = {
+    "r": <FaHandFist className="icon" />,
+    "p": <FaHand className="icon" />,
+    "s": <FaHandPeace className="icon" />,
+  };
+  const Icon = ICONS[action];
+
+  const handleClick = () => {
+    setActiveButton(action);
+    fetch('/play_game', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ action }),
+    })
+    .then(response => response.json())
+    .then(response => {
+      onActionSelected(response, action);
+    })
+    .catch(error => {
+      console.error('Error:', error);
+    });
+  };
+
+  return (
+    <button
+      className={`round-btn ${action} ${activeButton === action ? 'active' : ''}`}
+      onClick={handleClick}
+    >
+      {Icon}
+    </button>
+  );
+}
+```
+
+## CSS Classes
+
+The button applies the following CSS classes:
+- `round-btn` - Base button styling
+- `{action}` - Action-specific styling (`r`, `p`, or `s`)
+- `active` - Applied when this button matches `activeButton`

@@ -1,0 +1,438 @@
+---
+title: Frontend Development
+description: Explore the React component structure and frontend implementation
+---
+
+## React Component Overview
+
+The frontend is built with React using functional components and hooks. The entire application is contained in `client/src/App.js`, which includes:
+
+- **App**: Main container component
+- **ActionButton**: Interactive button for user moves
+- **Player**: Display component for player/computer state
+- **ActionIcon**: Icon renderer for game actions
+
+## Component Architecture
+
+```
+App (Main Component)
+├── ActionButton (x3) - Rock, Paper, Scissors buttons
+│   └── FaHandFist / FaHand / FaHandPeace icons
+├── Player (x2) - Player and Computer displays
+│   └── ActionIcon - Current action visualization
+└── Winner Display - Game result text
+```
+
+## App Component
+
+The main `App` component manages application state and renders the game interface.
+
+### State Management
+
+```jsx
+// App.js:108-113
+const [playerAction, setPlayerAction] = useState("start");
+const [computerAction, setComputerAction] = useState("start");
+const [winner, setWinner] = useState("");
+const [activeButton, setActiveButton] = useState(null);
+```
+
+**State Variables**:
+- `playerAction`: Current player action (`"start"`, `"r"`, `"p"`, or `"s"`)
+- `computerAction`: Current computer action
+- `winner`: Game result (`""`, `"Player won!"`, `"Player lost!"`, or `"It's a tie"`)
+- `activeButton`: Currently active button for visual feedback
+
+### Response Handler
+
+```jsx
+// App.js:116-120
+const onActionSelected = (response, selectedAction) => {
+  setPlayerAction(selectedAction);
+  setComputerAction(response['computer_action'])
+  setWinner(response['result'])
+}
+```
+
+This callback receives the API response and updates all relevant state variables, triggering a re-render.
+
+### JSX Structure
+
+```jsx
+// App.js:122-141
+return (
+  <div className="App">
+    <header className="App-container">
+      <h1>Rock Paper Scissors</h1>
+      <div>
+        <div className="action-btn">
+            <ActionButton action="r" onActionSelected={onActionSelected} 
+                          activeButton={activeButton} setActiveButton={setActiveButton} />
+            <ActionButton action="p" onActionSelected={onActionSelected} 
+                          activeButton={activeButton} setActiveButton={setActiveButton} />
+            <ActionButton action="s" onActionSelected={onActionSelected} 
+                          activeButton={activeButton} setActiveButton={setActiveButton} />
+        </div>
+        <div className="container">
+            <Player name="Player" action={playerAction} winner={winner} />
+            <h2>vs</h2>
+            <Player name="Computer" action={computerAction} winner={winner} />
+        </div>
+        <h2>{winner}</h2>
+      </div>
+    </header>
+  </div>
+);
+```
+
+## ActionButton Component
+
+The `ActionButton` component handles user interaction and API communication.
+
+### Component Definition
+
+```jsx
+// App.js:20-64
+function ActionButton({ action, onActionSelected, activeButton, setActiveButton }) {
+  /**
+   * Button component for rock, paper, scissors actions.
+   * 
+   * @param {string} action - The action ('r', 'p', 's')
+   * @param {function} onActionSelected - Callback with server response
+   * @param {string} activeButton - Currently active button
+   * @param {function} setActiveButton - Set active button state
+   */
+```
+
+### Icon Mapping
+
+```jsx
+// App.js:29-34
+const ICONS = {
+  "r": <FaHandFist className="icon" />,
+  "p": <FaHand className="icon" />,
+  "s": <FaHandPeace className="icon" />,
+};
+const Icon = ICONS[action];
+```
+
+<Note>
+The component uses Font Awesome icons from the `react-icons` package:
+- `FaHandFist` for Rock
+- `FaHand` for Paper  
+- `FaHandPeace` for Scissors
+</Note>
+
+### Click Handler with API Call
+
+```jsx
+// App.js:36-54
+const handleClick = () => {
+  setActiveButton(action); // Set this button as active
+  // Send action to the Flask server
+  fetch('/play_game', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ action }),
+  })
+  .then(response => response.json())
+  .then(response => {
+    // Handle server response
+    onActionSelected(response, action);
+  })
+  .catch(error => {
+    console.error('Error:', error);
+  });
+};
+```
+
+<Steps>
+  <Step title="Set Active State">
+    Immediately updates the UI to show which button was clicked
+  </Step>
+  
+  <Step title="Send API Request">
+    Makes a POST request to `/play_game` with the selected action
+  </Step>
+  
+  <Step title="Parse Response">
+    Converts the JSON response from the Flask backend
+  </Step>
+  
+  <Step title="Update Parent State">
+    Calls `onActionSelected` to update the game state in the parent component
+  </Step>
+</Steps>
+
+### Button Rendering
+
+```jsx
+// App.js:56-63
+return (
+  <button
+    className={`round-btn ${action} ${activeButton === action ? 'active' : ''}`}
+    onClick={handleClick}
+  >
+    {Icon}
+  </button>
+)
+```
+
+The button has dynamic classes:
+- `round-btn`: Base button styling
+- `${action}`: Action-specific class (`r`, `p`, or `s`) for colored borders
+- `active`: Applied when this button is the active one (scales up)
+
+## Player Component
+
+The `Player` component displays the player or computer's current state.
+
+```jsx
+// App.js:87-104
+function Player({name = "Player", action="start", winner}) {
+  /**
+   * Component representing a player in the game.
+   * 
+   * @param {string} name - 'Player' or 'Computer'
+   * @param {string} action - Current action ('start', 'r', 'p', 's')
+   * @param {string} winner - Game result
+   */
+  const result = (winner === undefined || winner === "" ) ? "" 
+    : winner === "Player won!" ? "you" 
+    : winner === "Player lost!" ? "pc" 
+    : "draw";
+    
+  return (
+    <div className={`player ${name}-${result}`}>
+      <div className={`score ${name}-${result}`}>{`${name}`}</div>
+      <div className="action">
+          {action && <ActionIcon name={name} action={action} />}
+      </div>
+    </div>
+  )
+}
+```
+
+### Result Calculation Logic
+
+The component determines the CSS class based on the winner:
+
+| Winner Value | Result for Player | Result for Computer |
+|--------------|-------------------|---------------------|
+| `"Player won!"` | `"you"` (green border) | `"pc"` (red border) |
+| `"Player lost!"` | `"pc"` (red border) | `"you"` (green border) |
+| `"It's a tie"` | `"draw"` (yellow border) | `"draw"` (yellow border) |
+| `""` (empty) | `""` (no special styling) | `""` (no special styling) |
+
+<Tip>
+The result string inverts for the Computer component, so when the player wins, the computer shows the "lost" styling.
+</Tip>
+
+## ActionIcon Component
+
+The `ActionIcon` component renders the appropriate game icon (rock, paper, scissors, or start).
+
+```jsx
+// App.js:66-85
+function ActionIcon({name, action}) {
+  /**
+   * Component for displaying action icons.
+   * 
+   * @param {string} name - 'Player' or 'Computer'
+   * @param {string} action - 'start', 'r', 'p', or 's'
+   */
+  const ICONS = {
+    "start": {"icon": start, "word": "start"},
+    "r": {"icon": rock, "word": "rock"},
+    "p": {"icon": paper, "word": "paper"},
+    "s": {"icon": scissors, "word": "scissors"},
+  }
+  const icon = ICONS[action]["icon"]
+  const action_word = ICONS[action]["word"]
+  const clase = `${action_word}-${name == "Player" ? "user" : "pc" }-icon`
+  
+  return (
+    <img src={icon} className={clase} alt="icon" />
+  )
+}
+```
+
+### Image Assets
+
+The icons are imported from the `images` directory:
+
+```jsx
+// App.js:14-17
+import start from './images/start.png';
+import rock from './images/rock.gif';
+import paper from './images/paper.gif';
+import scissors from './images/scissors.gif';
+```
+
+<Note>
+The computer's icons are horizontally flipped using CSS transform to create a "facing each other" effect.
+</Note>
+
+## Styling with CSS
+
+The application uses CSS variables for theming and consistent styling.
+
+### CSS Variables
+
+```css
+/* App.css:1-13 */
+:root {
+  --primary: #282c34;
+  --text-over-dark-background: white;
+  --text-over-light-background: black;
+  --blue: #1ea4c9;
+  --blue-light: #89def6;
+  --rock-gradient: hsl(348, 71%, 52%);
+  --paper-gradient: hsl(230, 89%, 62%);
+  --scissors-gradient: hsl(41, 89%, 49%);
+  --player-won: #35e48c;
+  --player-lost: #e34a6b;
+  --draw: #eedc68;
+}
+```
+
+### Action Button Styling
+
+```css
+/* App.css:46-74 */
+.round-btn {
+  width: 55px;
+  height: 55px;
+  margin: 6px;
+  border: 5px solid;
+  border-radius: 50%;
+  cursor: pointer;
+  background-color: white;
+}
+
+.round-btn.r {
+  border-color: var(--rock-gradient);
+}
+
+.round-btn.p {
+  border-color: var(--paper-gradient);
+}
+
+.round-btn.s {
+  border-color: var(--scissors-gradient);
+}
+
+.round-btn:hover {
+  transform: scale(1.3);
+}
+
+.round-btn.active {
+  transform: scale(1.3);
+}
+```
+
+### Winner Border Colors
+
+```css
+/* App.css:106-116 */
+.player.Player-you, .player.Computer-pc {
+  border-color: var(--player-won);  /* Green */
+}
+
+.player.Player-pc, .player.Computer-you {
+  border-color: var(--player-lost);  /* Red */
+}
+
+.player.Player-draw, .player.Computer-draw {
+  border-color: var(--draw);  /* Yellow */
+}
+```
+
+## API Integration Flow
+
+<CodeGroup>
+```jsx Request
+// User clicks Rock button
+fetch('/play_game', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({ action: 'r' }),
+})
+```
+
+```json Response
+{
+  "result": "Player won!",
+  "computer_action": "s"
+}
+```
+
+```jsx State Update
+// onActionSelected callback
+setPlayerAction('r');           // Show rock icon for player
+setComputerAction('s');         // Show scissors icon for computer
+setWinner('Player won!');       // Display "Player won!" text
+```
+</CodeGroup>
+
+## Key Features
+
+### Visual Feedback
+
+<Steps>
+  <Step title="Hover Effect">
+    Buttons scale up 1.3x when hovering (CSS transform)
+  </Step>
+  
+  <Step title="Active State">
+    Clicked button remains scaled while waiting for response
+  </Step>
+  
+  <Step title="Color Coding">
+    - Rock: Red border (`--rock-gradient`)
+    - Paper: Blue border (`--paper-gradient`)
+    - Scissors: Yellow/orange border (`--scissors-gradient`)
+  </Step>
+  
+  <Step title="Winner Highlighting">
+    Player boxes get colored borders based on game result
+  </Step>
+</Steps>
+
+### Responsive Design
+
+The layout uses Flexbox for responsiveness:
+
+```css
+/* App.css:82-88 */
+.container {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  vertical-align: center;
+  align-items: center;
+}
+```
+
+## Error Handling
+
+```jsx
+// App.js:51-53
+.catch(error => {
+  console.error('Error:', error);
+});
+```
+
+<Warning>
+Currently, API errors are only logged to the console. Consider adding user-facing error messages in production.
+</Warning>
+
+## Next Steps
+
+- Understand the [Backend Implementation](/development/backend)
+- Review the [System Architecture](/development/architecture)
+- Explore the [Component API Reference](/api/action-button)

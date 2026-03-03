@@ -1,0 +1,122 @@
+---
+title: 'ActionIcon'
+description: 'Component for displaying animated action icons (rock, paper, scissors, or start)'
+---
+
+## Overview
+
+The `ActionIcon` component displays an animated GIF image representing a game action. It shows different images based on the action (rock, paper, scissors, or the starting state) and applies appropriate CSS classes based on whether it's for the player or computer.
+
+## Props
+
+<ParamField path="name" type="string" required>
+  The name associated with the icon. Used to determine CSS styling:
+  - `'Player'` - Applies user-specific CSS classes
+  - `'Computer'` - Applies computer-specific CSS classes
+</ParamField>
+
+<ParamField path="action" type="string" required>
+  The action to display:
+  - `'start'` - Shows the starting/default state icon
+  - `'r'` - Shows the rock icon (animated GIF)
+  - `'p'` - Shows the paper icon (animated GIF)
+  - `'s'` - Shows the scissors icon (animated GIF)
+</ParamField>
+
+## Icon Mapping
+
+The component uses a mapping object to determine which image and word to display:
+
+```jsx
+const ICONS = {
+  "start": {"icon": start, "word": "start"},
+  "r": {"icon": rock, "word": "rock"},
+  "p": {"icon": paper, "word": "paper"},
+  "s": {"icon": scissors, "word": "scissors"},
+}
+```
+
+## CSS Class Logic
+
+The component dynamically generates CSS classes based on the action and player name:
+
+- Format: `{action_word}-{player_type}-icon`
+- `action_word` is the word from the ICONS mapping (`"start"`, `"rock"`, `"paper"`, or `"scissors"`)
+- `player_type` is either `"user"` (for Player) or `"pc"` (for Computer)
+
+**Examples:**
+- Player with rock: `rock-user-icon`
+- Computer with scissors: `scissors-pc-icon`
+- Player at start: `start-user-icon`
+
+## Usage Examples
+
+### Display Player's Action
+
+```jsx
+<ActionIcon name="Player" action="r" />
+// Renders: <img src={rock} className="rock-user-icon" alt="icon" />
+```
+
+### Display Computer's Action
+
+```jsx
+<ActionIcon name="Computer" action="s" />
+// Renders: <img src={scissors} className="scissors-pc-icon" alt="icon" />
+```
+
+### Display Starting State
+
+```jsx
+<ActionIcon name="Player" action="start" />
+// Renders: <img src={start} className="start-user-icon" alt="icon" />
+```
+
+### Usage in Player Component
+
+From `App.js:100`:
+
+```jsx
+function Player({name = "Player", action="start", winner}) {
+  return (
+    <div className={`player ${name}-${result}`}>
+      <div className={`score ${name}-${result}`}>{`${name}`}</div>
+      <div className="action">
+        {action && <ActionIcon name={name} action={action} />}
+      </div>
+    </div>
+  );
+}
+```
+
+## Component Implementation
+
+From `App.js:66-85`:
+
+```jsx
+function ActionIcon({name, action}) {
+  const ICONS = {
+    "start": {"icon": start, "word": "start"},
+    "r": {"icon": rock, "word": "rock"},
+    "p": {"icon": paper, "word": "paper"},
+    "s": {"icon": scissors, "word": "scissors"},
+  }
+  const icon = ICONS[action]["icon"]
+  const action_word = ICONS[action]["word"]
+  const clase = `${action_word}-${name == "Player" ? "user" : "pc" }-icon`
+  return (
+    <img src={icon} className={clase} alt="icon" />
+  )
+}
+```
+
+## Image Assets
+
+The component requires the following image imports (from `App.js:14-17`):
+
+```jsx
+import start from './images/start.png';
+import rock from './images/rock.gif';
+import paper from './images/paper.gif';
+import scissors from './images/scissors.gif';
+```

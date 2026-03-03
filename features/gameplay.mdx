@@ -1,0 +1,187 @@
+---
+title: 'Gameplay'
+description: 'Understanding the Rock Paper Scissors game mechanics and rules'
+---
+
+## How the Game Works
+
+The Rock Paper Scissors game is a classic hand game played between you and the computer. Each round, you select one of three actions, and the computer randomly chooses its action. The winner is determined based on the traditional rules of the game.
+
+## Game Rules
+
+The game follows the classic Rock Paper Scissors rules:
+
+<Accordion title="Rock beats Scissors">
+  Rock crushes scissors, so if you choose rock and the computer chooses scissors, you win!
+</Accordion>
+
+<Accordion title="Scissors beats Paper">
+  Scissors cuts paper, so if you choose scissors and the computer chooses paper, you win!
+</Accordion>
+
+<Accordion title="Paper beats Rock">
+  Paper covers rock, so if you choose paper and the computer chooses rock, you win!
+</Accordion>
+
+<Note>
+  If both you and the computer choose the same action, the game results in a tie.
+</Note>
+
+## Game Logic
+
+The game logic is implemented on the Flask backend server. When you make a selection, your choice is sent to the `/play_game` endpoint, which processes the game round.
+
+### Winner Determination
+
+The core game logic uses the `get_winner` function to determine the outcome:
+
+```python server.py
+def get_winner(player, opponent):
+    """
+    Determines the winner of a rock, paper, scissors game.
+
+    Args:
+        player (str): The action chosen by the player ('r' for rock, 'p' for paper, 's' for scissors).
+        opponent (str): The action chosen by the opponent.
+
+    Returns:
+        bool: True if the player wins, False otherwise.
+    """
+    # Define winning conditions for the player
+    if (player == 'r' and opponent == 's') or \
+    (player == 's' and opponent == 'p') or \
+        (player == 'p' and opponent == 'r'):
+        return True
+
+    # If none of the winning conditions match, the player loses
+    return False
+```
+
+This function checks all three winning conditions:
+- Rock (`'r'`) beats Scissors (`'s'`)
+- Scissors (`'s'`) beats Paper (`'p'`)
+- Paper (`'p'`) beats Rock (`'r'`)
+
+### Game Endpoint
+
+The `/play_game` endpoint handles each game round:
+
+```python server.py
+@app.route("/play_game", methods=["POST"])
+def play_game():
+    # Retrieve user's action from the request payload
+    user_action = request.json['action']
+    # Generate a random action for the computer
+    computer_action = random.choice(['r', 'p', 's'])
+
+    # Determine the game result based on the user's and computer's actions
+    if user_action == computer_action:
+        # If both actions are the same, it's a tie
+        return {"result": "It's a tie", "computer_action": computer_action}
+
+    # If the user wins, return the result indicating player victory
+    if get_winner(user_action, computer_action):
+        return {"result": "Player won!", "computer_action": computer_action}
+
+    # If the user loses, return the result indicating player's defeat
+    return {"result": "Player lost!", "computer_action": computer_action}
+```
+
+<Tabs>
+  <Tab title="You Win">
+    When you win, the server returns:
+    ```json
+    {
+      "result": "Player won!",
+      "computer_action": "s"  // example: computer chose scissors
+    }
+    ```
+  </Tab>
+  <Tab title="You Lose">
+    When you lose, the server returns:
+    ```json
+    {
+      "result": "Player lost!",
+      "computer_action": "r"  // example: computer chose rock
+    }
+    ```
+  </Tab>
+  <Tab title="Tie">
+    When it's a tie, the server returns:
+    ```json
+    {
+      "result": "It's a tie",
+      "computer_action": "p"  // example: both chose paper
+    }
+    ```
+  </Tab>
+</Tabs>
+
+## Action Codes
+
+The game uses single-letter codes to represent each action:
+
+| Action | Code | Icon |
+|--------|------|------|
+| Rock | `'r'` | 🤛 |
+| Paper | `'p'` | ✋ |
+| Scissors | `'s'` | ✌️ |
+
+## Game Flow
+
+1. **Player Selection**: You click one of the three action buttons (rock, paper, or scissors)
+2. **Request Sent**: Your selection is sent to the Flask backend via a POST request
+3. **Computer Choice**: The server randomly selects an action for the computer
+4. **Winner Calculation**: The `get_winner` function determines the outcome
+5. **Result Display**: The result is sent back to the frontend and displayed visually
+
+### Frontend State Management
+
+The React app manages the game state using React hooks:
+
+```javascript App.js
+const [playerAction, setPlayerAction] = useState("start");
+const [computerAction, setComputerAction] = useState("start");
+const [winner, setWinner] = useState("");
+const [activeButton, setActiveButton] = useState(null);
+
+// Function to handle action selection
+const onActionSelected = (response, selectedAction) => {
+  setPlayerAction(selectedAction);
+  setComputerAction(response['computer_action'])
+  setWinner(response['result'])
+}
+```
+
+## Game States
+
+### Win State
+
+<Info>
+  When you win, your player card gets a **green border** (`#35e48c`), while the computer's card gets a **red border** (`#e34a6b`). The result text displays "Player won!" below the game area.
+</Info>
+
+### Lose State
+
+<Info>
+  When you lose, your player card gets a **red border** (`#e34a6b`), while the computer's card gets a **green border** (`#35e48c`). The result text displays "Player lost!" below the game area.
+</Info>
+
+### Tie State
+
+<Info>
+  When it's a tie, both player cards get a **yellow border** (`#eedc68`). The result text displays "It's a tie" below the game area.
+</Info>
+
+### Initial State
+
+When the game first loads or before you make your first selection, both players show the "start" icon and no borders are displayed.
+
+## Visual Feedback
+
+The game provides immediate visual feedback:
+
+- **Animated Icons**: Each action (rock, paper, scissors) displays as an animated GIF image
+- **Color-Coded Results**: Player cards change border colors based on win/lose/tie outcomes
+- **Button Scaling**: The selected action button scales up to 1.3x its original size
+- **Result Text**: A prominent heading displays the game outcome below the player cards

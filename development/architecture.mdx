@@ -1,0 +1,251 @@
+---
+title: System Architecture
+description: Understand the architecture and communication flow between Flask backend and React frontend
+---
+
+## Overview
+
+The Rock Paper Scissors game uses a **client-server architecture** with a clear separation between the frontend and backend:
+
+- **Frontend**: React application handling UI and user interactions
+- **Backend**: Flask API managing game logic and random computer moves
+- **Communication**: HTTP POST requests with JSON payloads
+
+## Architecture Diagram
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                         Browser                             │
+│  ┌───────────────────────────────────────────────────────┐  │
+│  │              React Frontend (Port 3000)               │  │
+│  │  ┌─────────────┐  ┌──────────────┐  ┌─────────────┐  │  │
+│  │  │ ActionButton│  │ Player       │  │ ActionIcon  │  │  │
+│  │  │ Components  │  │ Components   │  │ Components  │  │  │
+│  │  └──────┬──────┘  └──────────────┘  └─────────────┘  │  │
+│  │         │                                             │  │
+│  │         │ fetch('/play_game', ...)                    │  │
+│  │         │                                             │  │
+│  └─────────┼─────────────────────────────────────────────┘  │
+└────────────┼────────────────────────────────────────────────┘
+             │
+             │ HTTP POST with JSON
+             │ { "action": "r" | "p" | "s" }
+             │
+             ▼
+┌─────────────────────────────────────────────────────────────┐
+│              Flask Backend (Port 5000)                      │
+│  ┌───────────────────────────────────────────────────────┐  │
+│  │                   /play_game Endpoint                 │  │
+│  │                                                       │  │
+│  │  1. Receive user action from request.json            │  │
+│  │  2. Generate random computer action                  │  │
+│  │  3. Determine winner using get_winner()              │  │
+│  │  4. Return result + computer action as JSON          │  │
+│  └───────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────┘
+             │
+             │ HTTP Response (JSON)
+             │ { "result": "...", "computer_action": "..." }
+             │
+             ▼
+        React updates UI
+```
+
+## Communication Flow
+
+<Steps>
+  <Step title="User Action">
+    The user clicks one of the three action buttons (Rock, Paper, or Scissors) in the React UI.
+    
+    ```jsx
+    // ActionButton component in App.js:36
+    const handleClick = () => {
+      setActiveButton(action);
+      // Send action to the Flask server
+      fetch('/play_game', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ action }),
+      })
+    ```
+  </Step>
+
+  <Step title="API Request">
+    The frontend sends a POST request to `/play_game` with the user's action:
+    
+    **Request**:
+    ```json
+    {
+      "action": "r"  // "r" for rock, "p" for paper, "s" for scissors
+    }
+    ```
+    
+    The request is proxied from `localhost:3000` to `127.0.0.1:5000` via the proxy configuration.
+  </Step>
+
+  <Step title="Backend Processing">
+    The Flask server receives the request and processes it:
+    
+    ```python
+    # server.py:26-52
+    @app.route("/play_game", methods=["POST"])
+    def play_game():
+        # Retrieve user's action from the request payload
+        user_action = request.json['action']
+        # Generate a random action for the computer
+        computer_action = random.choice(['r', 'p', 's'])
+        
+        # Determine the game result
+        if user_action == computer_action:
+            return {"result": "It's a tie", "computer_action": computer_action}
+        
+        if get_winner(user_action, computer_action):
+            return {"result": "Player won!", "computer_action": computer_action}
+        
+        return {"result": "Player lost!", "computer_action": computer_action}
+    ```
+  </Step>
+
+  <Step title="Game Logic Execution">
+    The `get_winner()` function determines if the player wins:
+    
+    ```python
+    # server.py:57-75
+    def get_winner(player, opponent):
+        # Define winning conditions for the player
+        if (player == 'r' and opponent == 's') or \
+           (player == 's' and opponent == 'p') or \
+           (player == 'p' and opponent == 'r'):
+            return True
+        return False
+    ```
+  </Step>
+
+  <Step title="API Response">
+    The backend returns a JSON response:
+    
+    **Response**:
+    ```json
+    {
+      "result": "Player won!",
+      "computer_action": "s"
+    }
+    ```
+  </Step>
+
+  <Step title="UI Update">
+    The React frontend receives the response and updates the UI:
+    
+    ```jsx
+    // App.js:46-50
+    .then(response => response.json())
+    .then(response => {
+      // Handle server response
+      onActionSelected(response, action);
+    })
+    ```
+    
+    The `onActionSelected` handler updates state:
+    ```jsx
+    // App.js:116-120
+    const onActionSelected = (response, selectedAction) => {
+      setPlayerAction(selectedAction);
+      setComputerAction(response['computer_action'])
+      setWinner(response['result'])
+    }
+    ```
+  </Step>
+</Steps>
+
+## Proxy Configuration
+
+During development, the React app runs on port 3000 while Flask runs on port 5000. To avoid CORS issues, the React development server proxies API requests to Flask.
+
+**Configuration in `client/package.json`**:
+```json
+{
+  "name": "client",
+  "version": "0.1.0",
+  "private": true,
+  "proxy": "http://127.0.0.1:5000/",
+  ...
+}
+```
+
+<Note>
+When the React app makes a request to `/play_game`, the dev server automatically forwards it to `http://127.0.0.1:5000/play_game`.
+</Note>
+
+### How Proxying Works
+
+1. **Frontend Request**: `fetch('/play_game', ...)`
+2. **Dev Server Intercepts**: Recognizes it's an API call (not a static asset)
+3. **Forwards to Backend**: `http://127.0.0.1:5000/play_game`
+4. **Returns Response**: Backend response sent back to frontend
+
+<Warning>
+The proxy only works in development mode. In production, you'll need to configure CORS or serve the React build from Flask.
+</Warning>
+
+## State Management
+
+The React application uses React hooks for state management:
+
+```jsx
+// App.js:108-113
+const [playerAction, setPlayerAction] = useState("start");
+const [computerAction, setComputerAction] = useState("start");
+const [winner, setWinner] = useState("");
+const [activeButton, setActiveButton] = useState(null);
+```
+
+**State Flow**:
+1. **Initial State**: Both players show "start" icon
+2. **User Clicks**: `activeButton` set, action sent to API
+3. **Response Received**: `playerAction`, `computerAction`, and `winner` updated
+4. **UI Re-renders**: Components display new game state
+
+## Technology Stack
+
+### Backend (Flask)
+- **Flask 2.3.2**: Web framework
+- **Python 3.x**: Programming language
+- **random module**: Generates computer's random moves
+
+### Frontend (React)
+- **React 18.2.0**: UI library
+- **react-icons 5.0.1**: Icon components (FaHandFist, FaHand, FaHandPeace)
+- **react-scripts 5.0.1**: Build tooling
+- **CSS3**: Styling with CSS variables and flexbox
+
+## API Contract
+
+### Endpoint: POST /play_game
+
+**Request Body**:
+```typescript
+{
+  action: "r" | "p" | "s"  // User's choice
+}
+```
+
+**Response Body**:
+```typescript
+{
+  result: "Player won!" | "Player lost!" | "It's a tie",
+  computer_action: "r" | "p" | "s"  // Computer's choice
+}
+```
+
+**Action Codes**:
+- `"r"` = Rock
+- `"p"` = Paper
+- `"s"` = Scissors
+
+## Next Steps
+
+- Explore the [Frontend Components](/development/frontend) in detail
+- Understand the [Backend Implementation](/development/backend)
+- Review the [API Documentation](/api/play-game)

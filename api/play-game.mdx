@@ -1,0 +1,108 @@
+---
+title: 'POST /play_game'
+description: 'Play a game of Rock, Paper, Scissors against the computer'
+---
+
+## Endpoint
+
+```
+POST /play_game
+```
+
+This endpoint allows you to play a game of Rock, Paper, Scissors. Send your action, and the server will randomly generate the computer's action and determine the winner.
+
+## Request Body
+
+The request must include a JSON payload with the player's action.
+
+<ParamField body="action" type="string" required>
+  The player's chosen action. Must be one of:
+  - `'r'` - Rock
+  - `'p'` - Paper
+  - `'s'` - Scissors
+</ParamField>
+
+## Response
+
+The endpoint returns a JSON object containing the game result and the computer's action.
+
+<ResponseField name="result" type="string">
+  The outcome of the game. Possible values:
+  - `"It's a tie"` - Both players chose the same action
+  - `"Player won!"` - The player won the game
+  - `"Player lost!"` - The computer won the game
+</ResponseField>
+
+<ResponseField name="computer_action" type="string">
+  The computer's randomly chosen action:
+  - `'r'` - Rock
+  - `'p'` - Paper
+  - `'s'` - Scissors
+</ResponseField>
+
+## Game Logic
+
+The server determines the winner using the following rules:
+1. Rock beats Scissors
+2. Scissors beats Paper
+3. Paper beats Rock
+4. Same actions result in a tie
+
+## Example Request
+
+```bash
+curl -X POST http://localhost:5000/play_game \
+  -H "Content-Type: application/json" \
+  -d '{"action": "r"}'
+```
+
+## Example Responses
+
+<Expandable title="Player Wins">
+```json
+{
+  "result": "Player won!",
+  "computer_action": "s"
+}
+```
+Player chose rock (`'r'`) and computer chose scissors (`'s'`). Rock beats scissors.
+</Expandable>
+
+<Expandable title="Player Loses">
+```json
+{
+  "result": "Player lost!",
+  "computer_action": "p"
+}
+```
+Player chose rock (`'r'`) and computer chose paper (`'p'`). Paper beats rock.
+</Expandable>
+
+<Expandable title="Tie Game">
+```json
+{
+  "result": "It's a tie",
+  "computer_action": "r"
+}
+```
+Both player and computer chose rock (`'r'`).
+</Expandable>
+
+## Implementation Details
+
+The endpoint is implemented in `server.py:26-52` using Flask:
+
+```python
+@app.route("/play_game", methods=["POST"])
+def play_game():
+    user_action = request.json['action']
+    computer_action = random.choice(['r', 'p', 's'])
+    
+    if user_action == computer_action:
+        return {"result": "It's a tie", "computer_action": computer_action}
+    
+    if get_winner(user_action, computer_action):
+        return {"result": "Player won!", "computer_action": computer_action}
+    
+    return {"result": "Player lost!", "computer_action": computer_action}
+```
