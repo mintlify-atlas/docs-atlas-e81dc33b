@@ -1,0 +1,172 @@
+---
+title: 'App'
+description: 'Main application component for the Rock Paper Scissors game'
+---
+
+## Overview
+
+The `App` component is the main React component that orchestrates the entire Rock Paper Scissors game interface. It's the default export from `App.js` and serves as the root component of the application.
+
+<Note>
+  This is the only component exported from `App.js`. The `ActionButton`, `ActionIcon`, and `Player` components are internal implementation details defined within the same file.
+</Note>
+
+## Features
+
+The App component provides:
+
+- **Game state management** using React hooks
+- **User interface layout** with action buttons and player displays
+- **API integration** handling requests to the Flask backend
+- **Real-time feedback** showing game results and animations
+
+## State Management
+
+The component uses four state variables managed with the `useState` hook:
+
+<ResponseField name="playerAction" type="string">
+  Tracks the player's selected action. Default: `"start"`
+  
+  Values: `'start'`, `'r'`, `'p'`, or `'s'`
+</ResponseField>
+
+<ResponseField name="computerAction" type="string">
+  Stores the computer's action received from the server. Default: `"start"`
+  
+  Values: `'start'`, `'r'`, `'p'`, or `'s'`
+</ResponseField>
+
+<ResponseField name="winner" type="string">
+  Contains the game result text. Default: `""`
+  
+  Values: `""`, `"Player won!"`, `"Player lost!"`, or `"It's a tie"`
+</ResponseField>
+
+<ResponseField name="activeButton" type="string | null">
+  Tracks which action button is currently selected for visual feedback. Default: `null`
+  
+  Values: `null`, `'r'`, `'p'`, or `'s'`
+</ResponseField>
+
+## Event Handlers
+
+### onActionSelected
+
+```jsx
+const onActionSelected = (response, selectedAction) => {
+  setPlayerAction(selectedAction);
+  setComputerAction(response['computer_action'])
+  setWinner(response['result'])
+}
+```
+
+This callback function is triggered when a game action is selected and the server responds. It updates all relevant state variables to reflect the game outcome.
+
+**Parameters:**
+- `response` (object) - Server response containing `computer_action` and `result`
+- `selectedAction` (string) - The action chosen by the player
+
+## Component Structure
+
+```jsx
+<div className="App">
+  <header className="App-container">
+    <h1>Rock Paper Scissors</h1>
+    <div>
+      {/* Action buttons for rock, paper, scissors */}
+      <div className="action-btn">
+        <ActionButton action="r" ... />
+        <ActionButton action="p" ... />
+        <ActionButton action="s" ... />
+      </div>
+      
+      {/* Player displays showing current game state */}
+      <div className="container">
+        <Player name="Player" action={playerAction} winner={winner} />
+        <h2>vs</h2>
+        <Player name="Computer" action={computerAction} winner={winner} />
+      </div>
+      
+      {/* Game result text */}
+      <h2>{winner}</h2>
+    </div>
+  </header>
+</div>
+```
+
+## Usage
+
+The App component is imported and rendered by the application's entry point:
+
+```jsx
+// index.js
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import App from './App';
+import './index.css';
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
+```
+
+## Dependencies
+
+The component imports and uses:
+
+- `React`, `useState`, `useEffect` from 'react'
+- `FaHand`, `FaHandPeace`, `FaHandFist` from 'react-icons/fa6'
+- Image assets: `start.png`, `rock.gif`, `paper.gif`, `scissors.gif`
+- `App.css` for styling
+
+## Implementation
+
+From `App.js:106-142`:
+
+```jsx
+export default function App() {
+  // State variables for player and computer actions, and game winner
+  const [playerAction, setPlayerAction] = useState("start");
+  const [computerAction, setComputerAction] = useState("start");
+  const [winner, setWinner] = useState("");
+  const [activeButton, setActiveButton] = useState(null);
+
+  // Function to handle action selection
+  const onActionSelected = (response, selectedAction) => {
+    setPlayerAction(selectedAction);
+    setComputerAction(response['computer_action'])
+    setWinner(response['result'])
+  }
+
+  return (
+    <div className="App">
+      <header className="App-container">
+        <h1>Rock Paper Scissors</h1>
+        <div>
+          <div className="action-btn">
+              <ActionButton action="r" onActionSelected={onActionSelected} activeButton={activeButton} setActiveButton={setActiveButton} />
+              <ActionButton action="p" onActionSelected={onActionSelected} activeButton={activeButton} setActiveButton={setActiveButton} />
+              <ActionButton action="s" onActionSelected={onActionSelected} activeButton={activeButton} setActiveButton={setActiveButton} />
+          </div>
+          <div className="container">
+              <Player name="Player" action={playerAction} winner={winner} />
+              <h2>vs</h2>
+              <Player name="Computer" action={computerAction} winner={winner} />
+          </div>
+          <h2>{winner}</h2>
+        </div>
+      </header>
+    </div>
+  );
+}
+```
+
+## See Also
+
+- [ActionButton Component](/api/action-button) - Interactive buttons for game actions
+- [Player Component](/api/player) - Display component for player/computer state
+- [ActionIcon Component](/api/action-icon) - Animated action icons
+- [Frontend Architecture](/development/frontend) - Overall React architecture

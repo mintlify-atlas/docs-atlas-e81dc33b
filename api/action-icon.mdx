@@ -7,6 +7,10 @@ description: 'Component for displaying animated action icons (rock, paper, sciss
 
 The `ActionIcon` component displays an animated GIF image representing a game action. It shows different images based on the action (rock, paper, scissors, or the starting state) and applies appropriate CSS classes based on whether it's for the player or computer.
 
+<Note>
+  `ActionIcon` is an internal component defined within `App.js` (lines 66-85) and is not exported separately. It's used by the `Player` component to display action images.
+</Note>
+
 ## Props
 
 <ParamField path="name" type="string" required>

@@ -46,7 +46,7 @@
           },
           {
             "group": "Components",
-            "pages": ["api/action-button", "api/action-icon", "api/player"]
+            "pages": ["api/app", "api/action-button", "api/action-icon", "api/player"]
           }
         ]
       }

@@ -150,8 +150,8 @@ function Player({name = "Player", action="start", winner}) {
 
 ## Dependencies
 
-The Player component uses the `ActionIcon` component to display the action images. Make sure to import it:
+The Player component uses the `ActionIcon` component to display the action images.
 
-```jsx
-import { ActionIcon } from './ActionIcon';
-```
+<Note>
+  Both `Player` and `ActionIcon` are internal components defined within `App.js` (lines 66-85 and 87-104) and are not exported separately. They work together as part of the application's component architecture.
+</Note>
